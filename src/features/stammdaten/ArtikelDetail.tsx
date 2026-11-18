@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  ActionIcon,
   Alert,
   Badge,
   Button,
@@ -13,9 +14,11 @@ import {
   Switch,
   Table,
   Text,
+  Tooltip,
 } from '@mantine/core';
+import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconDeviceFloppy, IconEdit, IconInfoCircle } from '@tabler/icons-react';
+import { IconArrowLeft, IconDeviceFloppy, IconEdit, IconInfoCircle, IconTrash } from '@tabler/icons-react';
 import { doc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { col } from '../../data/refs';
@@ -27,13 +30,15 @@ import { lagerwert, variantenKombinationen, variantenLabel } from '../../domain/
 import { ArtikelBild, BestandZahl, SeitenKopf } from '../../components/Bausteine';
 import { ArtikelFormular } from './ArtikelFormular';
 import { BildVerwaltung } from './BildVerwaltung';
+import { SORTIERUNG_AUSSERHALB } from './artikelSpeichern';
+import { loescheArtikel, loescheVariante } from './loeschen';
 
 type Aenderung = Partial<Pick<Variante, 'vkPreis' | 'ekDurchschnitt' | 'mindestbestand' | 'aktiv'>>;
 
 export function ArtikelDetail() {
   const { artikelId } = useParams();
   const navigate = useNavigate();
-  const { artikelById, varianten } = useDaten();
+  const { artikelById, varianten, aktiveInventur } = useDaten();
   const artikel = artikelById.get(artikelId ?? '');
   const vs = useMemo(() => varianten.filter((v) => v.artikelId === artikelId), [varianten, artikelId]);
   const [bearbeiten, setBearbeiten] = useState(false);
@@ -55,7 +60,54 @@ export function ArtikelDetail() {
   const wert = <K extends keyof Aenderung>(v: Variante, k: K): Variante[K] => (aend[v.id]?.[k] ?? v[k]) as Variante[K];
   const setze = (id: string, a: Aenderung) => setAend((alt) => ({ ...alt, [id]: { ...alt[id], ...a } }));
   const anzahlAend = Object.keys(aend).length;
-  const fehlend = variantenKombinationen(artikel).length - vs.filter((v) => v.sortierung !== 9999).length;
+  const fehlend = variantenKombinationen(artikel).length - vs.filter((v) => v.sortierung !== SORTIERUNG_AUSSERHALB).length;
+  const art = artikel;
+
+  function varianteLoeschen(v: Variante) {
+    modals.openConfirmModal({
+      title: 'Variante löschen?',
+      children: (
+        <Text size="sm">
+          „{variantenLabel(v.attribute)}“ wird gelöscht und auch beim erneuten Speichern des Artikels nicht wieder angelegt. Das geht nur, wenn die Variante nie gebucht wurde.
+        </Text>
+      ),
+      labels: { confirm: 'Löschen', cancel: 'Abbrechen' },
+      confirmProps: { color: 'red' },
+      onConfirm: async () => {
+        try {
+          const r = await loescheVariante(art, v);
+          if (r.ok) notifications.show({ color: 'ruesthausGruen', title: 'Variante gelöscht', message: variantenLabel(v.attribute) });
+          else notifications.show({ color: 'orange', title: 'Löschen nicht möglich', message: r.grund, autoClose: 8000 });
+        } catch (e) {
+          notifications.show({ color: 'red', title: 'Löschen fehlgeschlagen', message: e instanceof Error ? e.message : String(e) });
+        }
+      },
+    });
+  }
+
+  function artikelLoeschen() {
+    modals.openConfirmModal({
+      title: `„${art.name}“ löschen?`,
+      children: (
+        <Text size="sm">
+          Der Artikel wird mit allen {vs.length} Varianten und Bildern endgültig gelöscht. Das geht nur, wenn nie etwas davon gebucht wurde und kein Bestand vorhanden ist. Sonst bitte stattdessen deaktivieren.
+        </Text>
+      ),
+      labels: { confirm: 'Endgültig löschen', cancel: 'Abbrechen' },
+      confirmProps: { color: 'red' },
+      onConfirm: async () => {
+        try {
+          const r = await loescheArtikel(art, vs);
+          if (r.ok) {
+            notifications.show({ color: 'ruesthausGruen', title: 'Artikel gelöscht', message: art.name });
+            navigate('/stammdaten');
+          } else notifications.show({ color: 'orange', title: 'Löschen nicht möglich', message: r.grund, autoClose: 8000 });
+        } catch (e) {
+          notifications.show({ color: 'red', title: 'Löschen fehlgeschlagen', message: e instanceof Error ? e.message : String(e) });
+        }
+      },
+    });
+  }
 
   function massenpreis() {
     const p = Number(massPreis);
@@ -97,9 +149,16 @@ export function ArtikelDetail() {
           </Group>
         }
         aktionen={
-          <Button variant="default" leftSection={<IconEdit size={16} />} onClick={() => setBearbeiten(true)}>
-            Bearbeiten
-          </Button>
+          <>
+            <Tooltip label={aktiveInventur ? 'Während der Inventur nicht möglich' : 'Nur möglich, wenn nie gebucht wurde'}>
+              <Button variant="subtle" color="red" leftSection={<IconTrash size={16} />} onClick={artikelLoeschen} disabled={Boolean(aktiveInventur)}>
+                Löschen
+              </Button>
+            </Tooltip>
+            <Button variant="default" leftSection={<IconEdit size={16} />} onClick={() => setBearbeiten(true)}>
+              Bearbeiten
+            </Button>
+          </>
         }
       />
       <Stack>
@@ -142,7 +201,7 @@ export function ArtikelDetail() {
             </Group>
           </Group>
           <ScrollArea>
-            <Table striped highlightOnHover miw={720} verticalSpacing={6}>
+            <Table striped highlightOnHover miw={760} verticalSpacing={6}>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Variante</Table.Th>
@@ -151,6 +210,7 @@ export function ArtikelDetail() {
                   <Table.Th>Ø-EK</Table.Th>
                   <Table.Th>Mindestbestand</Table.Th>
                   <Table.Th>Aktiv</Table.Th>
+                  <Table.Th />
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -160,7 +220,7 @@ export function ArtikelDetail() {
                       <Group gap="xs" wrap="nowrap">
                         <ArtikelBild src={artikel.thumbnail} kategorie={artikel.kategorie} groesse={26} />
                         <Text size="sm">{variantenLabel(v.attribute)}</Text>
-                        {v.sortierung === 9999 && (
+                        {v.sortierung === SORTIERUNG_AUSSERHALB && (
                           <Badge size="xs" color="gray">
                             nicht mehr in Merkmalen
                           </Badge>
@@ -190,6 +250,27 @@ export function ArtikelDetail() {
                     </Table.Td>
                     <Table.Td>
                       <Switch size="sm" checked={wert(v, 'aktiv')} onChange={(e) => setze(v.id, { aktiv: e.currentTarget.checked })} />
+                    </Table.Td>
+                    <Table.Td>
+                      <Tooltip
+                        label={
+                          aktiveInventur
+                            ? 'Während der Inventur nicht möglich'
+                            : v.bestand !== 0
+                              ? 'Nur Varianten ohne Bestand können gelöscht werden'
+                              : 'Variante löschen (nur wenn nie gebucht)'
+                        }
+                      >
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          aria-label={`Variante ${variantenLabel(v.attribute)} löschen`}
+                          disabled={v.bestand !== 0 || Boolean(aktiveInventur)}
+                          onClick={() => varianteLoeschen(v)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
                     </Table.Td>
                   </Table.Tr>
                 ))}

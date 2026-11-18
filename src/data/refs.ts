@@ -1,6 +1,16 @@
 import { collection, doc, type DocumentData, type DocumentSnapshot, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { STANDARD_EINSTELLUNGEN, type Artikel, type Benutzer, type Einstellungen, type Inventur, type Variante, type Vorgang } from '../domain/types';
+import {
+  normalisiereSchnitt,
+  STANDARD_EINSTELLUNGEN,
+  type Artikel,
+  type Benutzer,
+  type Einstellungen,
+  type Inventur,
+  type Variante,
+  type VarianteAttribute,
+  type Vorgang,
+} from '../domain/types';
 
 export const col = {
   artikel: collection(db, 'artikel'),
@@ -18,18 +28,29 @@ type Snap = QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>
 
 export const alsArtikel = (s: Snap): Artikel => {
   const d = s.data() ?? {};
+  const achsen = d.achsen ?? [];
   return {
     id: s.id,
     name: d.name ?? '',
     kategorie: d.kategorie ?? 'sonstiges',
-    achsen: d.achsen ?? [],
+    achsen,
     groessen: d.groessen ?? [],
+    // Ältere Artikel hatten fest „Herren/Damen“ ohne eigenes Feld.
+    schnitte: d.schnitte ?? (achsen.includes('schnitt') ? ['Herren', 'Damen'] : []),
+    ausgeschlossen: d.ausgeschlossen ?? [],
     vkPreisStandard: d.vkPreisStandard ?? 0,
     beschreibung: d.beschreibung ?? '',
     thumbnail: d.thumbnail ?? null,
     aktiv: d.aktiv ?? true,
   };
 };
+
+function alsAttribute(a: VarianteAttribute | undefined): VarianteAttribute {
+  if (!a) return {};
+  const schnitt = normalisiereSchnitt(a.schnitt);
+  const { schnitt: _alt, ...rest } = a;
+  return schnitt ? { ...rest, schnitt } : rest;
+}
 
 export const alsVariante = (s: Snap): Variante => {
   const d = s.data() ?? {};
@@ -38,7 +59,7 @@ export const alsVariante = (s: Snap): Variante => {
     artikelId: d.artikelId,
     artikelName: d.artikelName ?? '',
     kategorie: d.kategorie ?? 'sonstiges',
-    attribute: d.attribute ?? {},
+    attribute: alsAttribute(d.attribute),
     sortierung: d.sortierung ?? 0,
     vkPreis: d.vkPreis ?? 0,
     ekDurchschnitt: d.ekDurchschnitt ?? 0,

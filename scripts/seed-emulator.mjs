@@ -54,13 +54,13 @@ const ZUSTAENDE = ['unbenaeht', 'benaeht', 'sozial'];
 const aufnaeherIds = [];
 let zaehler = 0;
 
-function artikel({ name, kategorie, achsen, groessen = [], vk, ek }) {
+function artikel({ name, kategorie, achsen, groessen = [], schnitte = [], vk, ek }) {
   const ref = doc(collection(db, 'artikel'));
-  b.set(ref, { name, kategorie, achsen, groessen, vkPreisStandard: vk, beschreibung: '', thumbnail: null, aktiv: true });
+  b.set(ref, { name, kategorie, achsen, groessen, schnitte, ausgeschlossen: [], vkPreisStandard: vk, beschreibung: '', thumbnail: null, aktiv: true });
   let kombis = [{}];
   const erweitere = (key, werte) => (kombis = kombis.flatMap((k) => werte.map((w) => ({ ...k, [key]: w }))));
   if (achsen.includes('kollektion')) erweitere('kollektion', ['neu', 'alt']);
-  if (achsen.includes('schnitt')) erweitere('schnitt', ['herren', 'damen']);
+  if (achsen.includes('schnitt')) erweitere('schnitt', schnitte);
   if (achsen.includes('groesse')) erweitere('groesse', groessen);
   if (achsen.includes('zustand')) erweitere('zustand', ZUSTAENDE);
   kombis.forEach((attribute, sortierung) => {
@@ -84,8 +84,8 @@ function artikel({ name, kategorie, achsen, groessen = [], vk, ek }) {
 
 artikel({ name: 'Kluft', kategorie: 'kluft', achsen: ['groesse', 'zustand'], groessen: ['140', '152', '164', '176', 'S', 'M', 'L'], vk: 55, ek: 38 });
 artikel({ name: 'Kluftbluse', kategorie: 'kluftbluse', achsen: ['groesse', 'zustand'], groessen: ['140', '152', '164', '36', '38', '40'], vk: 55, ek: 38 });
-artikel({ name: 'Stammes-Hoodie', kategorie: 'stammeskleidung', achsen: ['kollektion', 'schnitt', 'groesse'], groessen: ['S', 'M', 'L', 'XL'], vk: 35, ek: 22 });
-artikel({ name: 'Stammes-T-Shirt', kategorie: 'stammeskleidung', achsen: ['kollektion', 'schnitt', 'groesse'], groessen: ['S', 'M', 'L', 'XL'], vk: 15, ek: 8.5 });
+artikel({ name: 'Stammes-Hoodie', kategorie: 'stammeskleidung', achsen: ['kollektion', 'schnitt', 'groesse'], groessen: ['S', 'M', 'L', 'XL'], schnitte: ['Herren', 'Damen'], vk: 35, ek: 22 });
+artikel({ name: 'Stammes-T-Shirt', kategorie: 'stammeskleidung', achsen: ['kollektion', 'schnitt', 'groesse'], groessen: ['S', 'M', 'L', 'XL'], schnitte: ['Herren', 'Damen'], vk: 15, ek: 8.5 });
 artikel({ name: 'Halstuch Roßtal', kategorie: 'halstuch', achsen: [], vk: 12, ek: 6 });
 for (const [name, vk, ek] of [
   ['Aufnäher DPSG-Lilie', 3, 1.2],

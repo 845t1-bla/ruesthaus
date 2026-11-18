@@ -13,7 +13,8 @@ export interface Benutzer {
 export type Kategorie = 'kluft' | 'kluftbluse' | 'stammeskleidung' | 'halstuch' | 'aufnaeher' | 'sonstiges';
 export type Zustand = 'unbenaeht' | 'benaeht' | 'sozial';
 export type Kollektion = 'alt' | 'neu';
-export type Schnitt = 'herren' | 'damen';
+/** Frei definierbar je Artikel, z. B. „Herren“/„Damen“ oder „Normal“/„Schlank“. */
+export type Schnitt = string;
 export type Achse = 'groesse' | 'zustand' | 'kollektion' | 'schnitt';
 
 export interface Artikel {
@@ -22,6 +23,10 @@ export interface Artikel {
   kategorie: Kategorie;
   achsen: Achse[];
   groessen: string[];
+  /** Werte der Achse „Schnitt“ in Anzeige-Reihenfolge. */
+  schnitte: string[];
+  /** Variantenschlüssel, die es bewusst nicht gibt (z. B. schlanker Schnitt nicht in Gr. 128). */
+  ausgeschlossen: string[];
   vkPreisStandard: number;
   beschreibung: string;
   thumbnail: string | null;
@@ -180,9 +185,25 @@ export const KOLLEKTION_LABEL: Record<Kollektion, string> = {
   neu: 'neue Kollektion',
 };
 
-export const SCHNITT_LABEL: Record<Schnitt, string> = {
-  herren: 'Herren',
-  damen: 'Damen',
+/**
+ * Frühere Versionen speicherten den Schnitt fest als „herren“/„damen“.
+ * Diese Werte werden beim Lesen auf die neue, freie Schreibweise abgebildet.
+ */
+export function normalisiereSchnitt(s: string | undefined | null): string | undefined {
+  if (!s) return undefined;
+  if (s === 'herren') return 'Herren';
+  if (s === 'damen') return 'Damen';
+  return s;
+}
+
+/** Vorschlagswerte für die Achse „Schnitt“ je Kategorie. */
+export const STANDARD_SCHNITTE: Record<Kategorie, string[]> = {
+  kluft: ['Normal', 'Schlank'],
+  kluftbluse: ['Normal', 'Schlank'],
+  stammeskleidung: ['Herren', 'Damen'],
+  halstuch: [],
+  aufnaeher: [],
+  sonstiges: ['Herren', 'Damen'],
 };
 
 export const ACHSE_LABEL: Record<Achse, string> = {

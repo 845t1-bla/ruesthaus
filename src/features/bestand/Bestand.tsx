@@ -23,7 +23,6 @@ import { formatEuro, formatZahl, normalisiereName } from '../../domain/format';
 import {
   KATEGORIE_LABEL,
   KOLLEKTION_LABEL,
-  SCHNITT_LABEL,
   ZUSTAND_LABEL,
   type Kategorie,
   type Variante,
@@ -41,7 +40,7 @@ export function bestandCsv(varianten: Variante[]): string {
       { titel: 'Größe', wert: (v) => v.attribute.groesse ?? '' },
       { titel: 'Zustand', wert: (v) => (v.attribute.zustand ? ZUSTAND_LABEL[v.attribute.zustand] : '') },
       { titel: 'Kollektion', wert: (v) => (v.attribute.kollektion ? KOLLEKTION_LABEL[v.attribute.kollektion] : '') },
-      { titel: 'Schnitt', wert: (v) => (v.attribute.schnitt ? SCHNITT_LABEL[v.attribute.schnitt] : '') },
+      { titel: 'Schnitt', wert: (v) => v.attribute.schnitt ?? '' },
       { titel: 'Bestand', wert: (v) => v.bestand },
       { titel: 'Mindestbestand', wert: (v) => v.mindestbestand ?? '' },
       { titel: 'VK-Preis (EUR)', wert: (v) => csvZahl(v.vkPreis, 2) },
@@ -62,8 +61,16 @@ function KluftMatrix() {
   return (
     <SimpleGrid cols={{ base: 1, lg: 2 }}>
       {kluften.map((a) => {
-        const vs = varianten.filter((v) => v.artikelId === a.id);
-        const zelle = (g: string, z: Zustand) => vs.find((v) => v.attribute.groesse === g && v.attribute.zustand === z);
+        const vs = varianten.filter((v) => v.artikelId === a.id && (v.aktiv || v.bestand !== 0));
+        const hatSchnitt = a.achsen.includes('schnitt');
+        // Eine Zeile je Größe (und Schnitt), aber nur Kombinationen, die es gibt
+        const zeilen = a.groessen.flatMap((g) =>
+          (hatSchnitt ? a.schnitte : [undefined])
+            .filter((s) => vs.some((v) => v.attribute.groesse === g && v.attribute.schnitt === s))
+            .map((s) => ({ g, s })),
+        );
+        const zelle = (g: string, s: string | undefined, z: Zustand) =>
+          vs.find((v) => v.attribute.groesse === g && v.attribute.schnitt === s && v.attribute.zustand === z);
         return (
           <Paper withBorder p="md" key={a.id}>
             <Group mb="sm" gap="sm">
@@ -84,11 +91,19 @@ function KluftMatrix() {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {a.groessen.map((g) => (
-                  <Table.Tr key={g}>
-                    <Table.Td fw={600}>{g}</Table.Td>
+                {zeilen.map(({ g, s }) => (
+                  <Table.Tr key={`${g}|${s ?? ''}`}>
+                    <Table.Td fw={600} style={{ whiteSpace: 'nowrap' }}>
+                      {g}
+                      {s && (
+                        <Text span size="xs" c="dimmed" fw={500}>
+                          {' '}
+                          · {s}
+                        </Text>
+                      )}
+                    </Table.Td>
                     {ZUSTAENDE.map((z) => {
-                      const v = zelle(g, z);
+                      const v = zelle(g, s, z);
                       return (
                         <Table.Td key={z} className="rh-zahl">
                           {v ? <BestandZahl bestand={v.bestand} mindestbestand={v.mindestbestand} /> : '–'}
@@ -96,7 +111,7 @@ function KluftMatrix() {
                       );
                     })}
                     <Table.Td className="rh-zahl" fw={600}>
-                      {ZUSTAENDE.reduce((s, z) => s + (zelle(g, z)?.bestand ?? 0), 0)}
+                      {ZUSTAENDE.reduce((summe, z) => summe + (zelle(g, s, z)?.bestand ?? 0), 0)}
                     </Table.Td>
                   </Table.Tr>
                 ))}
