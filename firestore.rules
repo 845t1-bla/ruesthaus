@@ -1,0 +1,105 @@
+rules_version = '2';
+
+// Sicherheitsregeln der Rüsthaus-App.
+// Grundsatz: Nur aktive, vom Admin freigeschaltete Benutzer sehen Daten. Buchungen (Vorgänge)
+// werden nie gelöscht; Änderungen sind nur fürs Stornieren und Anonymisieren erlaubt.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function angemeldet() {
+      return request.auth != null;
+    }
+    function benutzerPfad() {
+      return /databases/$(database)/documents/benutzer/$(request.auth.uid);
+    }
+    function aktiv() {
+      return angemeldet() && exists(benutzerPfad()) && get(benutzerPfad()).data.aktiv == true;
+    }
+    function admin() {
+      return aktiv() && get(benutzerPfad()).data.rolle == 'admin';
+    }
+    function einstellungenPfad() {
+      return /databases/$(database)/documents/einstellungen/app;
+    }
+    function inventurLaeuft() {
+      return exists(einstellungenPfad()) && get(einstellungenPfad()).data.inventurAktiv != null;
+    }
+    function nurFelder(felder) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(felder);
+    }
+
+    // Einstellungen: lesbar für alle Angemeldeten (für die Ersteinrichtung nötig).
+    // Anlegen nur bei der Ersteinrichtung zusammen mit dem eigenen Admin-Profil.
+    match /einstellungen/app {
+      allow read: if angemeldet();
+      allow create: if angemeldet()
+        && request.resource.data.ersteinrichtungDurch == request.auth.uid
+        && getAfter(benutzerPfad()).data.rolle == 'admin';
+      allow update: if admin();
+      allow delete: if false;
+    }
+
+    match /benutzer/{uid} {
+      allow read: if aktiv() || (angemeldet() && request.auth.uid == uid);
+      allow create: if admin()
+        || (angemeldet() && request.auth.uid == uid
+            && !exists(einstellungenPfad())
+            && getAfter(einstellungenPfad()).data.ersteinrichtungDurch == request.auth.uid
+            && request.resource.data.rolle == 'admin'
+            && request.resource.data.aktiv == true);
+      // Admins dürfen sich nicht selbst aussperren.
+      allow update: if admin() && (uid != request.auth.uid || nurFelder(['name', 'email']));
+      allow delete: if false;
+    }
+
+    match /artikel/{id} {
+      allow read: if aktiv();
+      allow write: if admin();
+    }
+
+    match /artikelBilder/{id} {
+      allow read: if aktiv();
+      allow write: if admin();
+    }
+
+    match /varianten/{id} {
+      allow read: if aktiv();
+      allow create, delete: if admin();
+      // Verkäufer ändern nur den Bestand (über Buchungen) und nicht während einer Inventur.
+      allow update: if admin() || (aktiv() && !inventurLaeuft() && nurFelder(['bestand']));
+    }
+
+    match /vorgaenge/{id} {
+      allow read: if aktiv();
+      allow create: if aktiv()
+        && request.resource.data.benutzerUid == request.auth.uid
+        && request.resource.data.storniert == false
+        && request.resource.data.positionen is list
+        && (admin() || request.resource.data.typ in ['VERKAUF', 'FLATRATE', 'FLATRATE_TAUSCH', 'SOZIALKLUFT', 'STORNO'])
+        && (!inventurLaeuft() || (admin() && request.resource.data.typ == 'INVENTURKORREKTUR'));
+      allow update: if
+        // Stornieren: eigene Buchung oder Admin, nur einmal, nicht während der Inventur
+        (aktiv() && !inventurLaeuft()
+          && resource.data.storniert == false
+          && !(resource.data.typ in ['STORNO', 'INVENTURKORREKTUR'])
+          && (admin() || resource.data.benutzerUid == request.auth.uid)
+          && request.resource.data.storniert == true
+          && nurFelder(['storniert', 'stornoDurchId']))
+        // Anonymisieren (DSGVO): nur der Käufername
+        || (admin() && nurFelder(['kaeufer', 'kaeuferKey']) && request.resource.data.kaeufer == 'anonymisiert');
+      allow delete: if false;
+    }
+
+    match /inventuren/{inventurId} {
+      allow read: if aktiv();
+      allow create, update: if admin();
+      allow delete: if false;
+
+      match /zaehlungen/{varianteId} {
+        allow read: if aktiv();
+        allow write: if aktiv()
+          && get(/databases/$(database)/documents/inventuren/$(inventurId)).data.status == 'offen';
+      }
+    }
+  }
+}

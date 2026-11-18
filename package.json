@@ -1,0 +1,45 @@
+{
+  "name": "ruesthaus",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Rüsthaus-Verwaltung für den DPSG Stamm Horsadal Roßtal",
+  "scripts": {
+    "dev": "vite",
+    "dev:emulator": "vite --mode emulator",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "icons": "node scripts/generate-icons.mjs",
+    "emulators": "npx --yes firebase-tools@14 emulators:start --only auth,firestore --project demo-ruesthaus",
+    "seed": "node scripts/seed-emulator.mjs",
+    "test:rules": "node scripts/rules-check.mjs"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.17.0",
+    "@mantine/hooks": "^7.17.0",
+    "@mantine/modals": "^7.17.0",
+    "@mantine/notifications": "^7.17.0",
+    "@tabler/icons-react": "^3.31.0",
+    "firebase": "^11.6.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
+    "mantine-datatable": "^7.17.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
+    "@vitejs/plugin-react": "^4.4.0",
+    "postcss": "^8.5.3",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "~5.7.3",
+    "vite": "^6.3.0",
+    "vite-plugin-pwa": "^0.21.2",
+    "vitest": "^3.1.0"
+  }
+}

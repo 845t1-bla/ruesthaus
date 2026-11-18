@@ -1,0 +1,68 @@
+:root {
+  --rh-bg: #f4f5f7;
+  --rh-surface: #ffffff;
+  --rh-border: #dfe3e8;
+  --rh-muted: #5b6573;
+  --rh-shell: #003056;
+  --rh-akzent: #810a1a;
+  --rh-gruppe: #f6efe4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mantine-color-scheme='light']) {
+    --rh-bg: #121821;
+    --rh-surface: #1a222d;
+    --rh-border: #2c3644;
+    --rh-muted: #9aa5b4;
+    --rh-shell: #001f3a;
+    --rh-gruppe: #232c38;
+  }
+}
+
+:root[data-mantine-color-scheme='dark'] {
+  --rh-bg: #121821;
+  --rh-surface: #1a222d;
+  --rh-border: #2c3644;
+  --rh-muted: #9aa5b4;
+  --rh-shell: #001f3a;
+  --rh-gruppe: #232c38;
+}
+
+html,
+body {
+  background: var(--rh-bg);
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Zahlen in Tabellen rechtsbündig und gleich breit */
+.rh-zahl {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rh-kachel {
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+.rh-kachel:hover {
+  box-shadow: 0 4px 14px rgba(0, 48, 86, 0.12);
+}
+
+.rh-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--rh-gruppe);
+  flex-shrink: 0;
+}
+
+@media print {
+  .rh-no-print {
+    display: none !important;
+  }
+}
