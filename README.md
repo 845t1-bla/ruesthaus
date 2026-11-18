@@ -1,5 +1,7 @@
 # Rüsthaus – DPSG Stamm Horsadal Roßtal
 
+**Live:** <https://845t1-bla.github.io/ruesthaus/> · Firebase-Projekt: `ruesthaus-rosstal` (Firestore in `europe-west3`)
+
 Web-App (PWA) zur Verwaltung des Rüsthauses: Bestand, Einkauf, Verkauf, Kluft-Flatrate mit Umtausch,
 Sozialkluften, jährliche Inventur mit Bericht und CSV-Exporte. Läuft im Browser auf Laptop, Android und iPhone
 und lässt sich wie eine App auf dem Homescreen installieren. Daten liegen in Firebase (Firestore), gehostet wird
