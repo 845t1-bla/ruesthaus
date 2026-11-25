@@ -190,7 +190,12 @@ export function Bewegungen() {
                         )}
                         {art === 'einkauf' && <Table.Td className="rh-zahl">{formatEuro(z.menge * z.ekPreis)}</Table.Td>}
                         <Table.Td>
-                          <ActionIcon variant="subtle" color="red" onClick={() => setZeilen((alt) => alt.filter((x) => x !== z))}>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            aria-label={`${bezeichnungVon(v)} aus der Liste entfernen`}
+                            onClick={() => setZeilen((alt) => alt.filter((x) => x !== z))}
+                          >
                             <IconTrash size={16} />
                           </ActionIcon>
                         </Table.Td>

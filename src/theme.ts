@@ -67,7 +67,8 @@ const beige: MantineColorsTuple = [
 
 export const theme = createTheme({
   primaryColor: 'dpsgBlau',
-  primaryShade: { light: 8, dark: 4 },
+  // Dunkel: Ton 6 (#0d5a9c) statt 4 – weiße Schrift auf Primärknöpfen 7,1:1 statt 4,2:1
+  primaryShade: { light: 8, dark: 6 },
   colors: { dpsgBlau, dpsgRot, ruesthausGruen, beige },
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
@@ -80,5 +81,8 @@ export const theme = createTheme({
     Paper: { defaultProps: { radius: 'md' } },
     NumberInput: { defaultProps: { decimalSeparator: ',', thousandSeparator: '.', hideControls: false } },
     Badge: { defaultProps: { radius: 'sm' } },
+    // Schließen-Knöpfe sind reine Symbole – für Screenreader und Sprachsteuerung benennen
+    Modal: { defaultProps: { closeButtonProps: { 'aria-label': 'Schließen' } } },
+    Notification: { defaultProps: { closeButtonProps: { 'aria-label': 'Meldung schließen' } } },
   },
 });

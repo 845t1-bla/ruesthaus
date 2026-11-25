@@ -88,14 +88,14 @@ export function BildVerwaltung({ artikel }: { artikel: Artikel }) {
                   </Badge>
                 ) : (
                   <Tooltip label="Als Titelbild verwenden">
-                    <ActionIcon variant="subtle" onClick={() => speichere([b, ...bilder.filter((x) => x.id !== b.id)])}>
+                    <ActionIcon variant="subtle" aria-label={`Bild ${i + 1} als Titelbild verwenden`} onClick={() => speichere([b, ...bilder.filter((x) => x.id !== b.id)])}>
                       <IconStar size={16} />
                     </ActionIcon>
                   </Tooltip>
                 )}
                 <Stack gap={0} align="flex-end">
                   <Tooltip label="Bild löschen">
-                    <ActionIcon variant="subtle" color="red" onClick={() => speichere(bilder.filter((x) => x.id !== b.id))}>
+                    <ActionIcon variant="subtle" color="red" aria-label={`Bild ${i + 1} löschen`} onClick={() => speichere(bilder.filter((x) => x.id !== b.id))}>
                       <IconTrash size={16} />
                     </ActionIcon>
                   </Tooltip>

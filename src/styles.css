@@ -28,9 +28,89 @@
   --rh-gruppe: #232c38;
 }
 
+/*
+ * Lesbarkeit (WCAG AA, HIG Accessibility › Vision): Mantines Standardgrau „dimmed“ (#868e96)
+ * erreicht auf Weiß nur 3,3:1. Eigene Werte für Nebentext, Platzhalter, Links und aktiven Tab.
+ *   hell:   #5b6573 auf #fff 5,9:1 · Platzhalter #6b7280 4,8:1 · aktiver Tab #003056 13,5:1
+ *   dunkel: #9aa5b4 auf #242424 6,2:1 · Link #669dcf 5,4:1 · aktiver Tab #9bbfe0 8,1:1
+ */
+/* „html:root“ erhöht die Spezifität: Mantine schreibt einige Farbvariablen erst zur Laufzeit. */
+html:root[data-mantine-color-scheme='light'] {
+  --mantine-color-dimmed: #5b6573;
+  --mantine-color-placeholder: #6b7280;
+  /* Fehlertexte und Pflicht-Sternchen: #fa5252 hatte 3,3:1 → #c92a2a 5,5:1 */
+  --mantine-color-error: #c92a2a;
+  /* Orange-Abzeichen (Nachbestellen): #e8590c hatte 3,2:1 → #b23c0b 5,2:1 */
+  --mantine-color-orange-light-color: #b23c0b;
+  --rh-tab-aktiv: #003056;
+}
+
+html:root[data-mantine-color-scheme='dark'] {
+  --mantine-color-dimmed: #9aa5b4;
+  --mantine-color-placeholder: #9aa5b4;
+  --mantine-color-anchor: #669dcf;
+  /* #e03131 hatte 3,4:1 → #ff8787 6,7:1 */
+  --mantine-color-error: #ff8787;
+  --rh-tab-aktiv: #9bbfe0;
+}
+
+/* Abzeichen nie unter 11 pt (HIG Typography: iOS-Minimum 11 pt; Mantine-Standard xs = 9 px). */
+.mantine-Badge-root {
+  --badge-fz-xs: 11px;
+  --badge-fz-sm: 11px;
+  --badge-height-xs: 18px;
+  --badge-height-sm: 20px;
+}
+
 html,
 body {
   background: var(--rh-bg);
+}
+
+/*
+ * Tippflächen auf Touch-Geräten (HIG Accessibility › Mobility: Standard 44 pt, Minimum 28 pt).
+ * Gilt nur bei grobem Zeiger, damit die Laptop-Ansicht kompakt bleibt.
+ */
+@media (pointer: coarse) {
+  .mantine-Button-root {
+    min-height: 44px;
+  }
+  .mantine-ActionIcon-root,
+  .mantine-CloseButton-root,
+  .mantine-Burger-root {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .mantine-Checkbox-root {
+    --checkbox-size-xs: 28px;
+    --checkbox-size-sm: 28px;
+  }
+  .mantine-Checkbox-body {
+    align-items: center;
+  }
+  .mantine-Checkbox-label {
+    padding-block: 8px;
+  }
+  .mantine-Radio-root {
+    --radio-size-xs: 28px;
+    --radio-size-sm: 28px;
+  }
+  .mantine-Radio-label {
+    padding-block: 8px;
+  }
+  .mantine-Switch-root {
+    --switch-height-sm: 28px;
+    --switch-width-sm: 50px;
+    --switch-thumb-size-sm: 22px;
+  }
+  .mantine-Chip-root {
+    --chip-size-xs: 36px;
+    --chip-size-sm: 36px;
+  }
+  /* Die Plus/Minus-Pfeilchen sind am Handy nur 17 pt hoch – dort tippt man die Zahl ohnehin ein. */
+  .mantine-NumberInput-controls {
+    display: none;
+  }
 }
 
 body {

@@ -319,6 +319,7 @@ export function Vorgaenge() {
                     <ActionIcon
                       variant="subtle"
                       color="red"
+                      aria-label={`Beleg ${v.belegNr} stornieren`}
                       onClick={(e) => {
                         e.stopPropagation();
                         stornieren(v);

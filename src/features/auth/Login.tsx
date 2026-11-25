@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Anchor, Button, Group, PasswordInput, Stack, TextInput } from '@mantine/core';
+import { Alert, Button, Group, PasswordInput, Stack, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase';
@@ -79,17 +79,17 @@ export function Login() {
           <Group justify="space-between">
             {modus === 'login' ? (
               <>
-                <Anchor component="button" type="button" size="xs" onClick={passwortVergessen}>
+                <Button variant="subtle" size="compact-sm" onClick={passwortVergessen}>
                   Passwort vergessen?
-                </Anchor>
-                <Anchor component="button" type="button" size="xs" c="dimmed" onClick={() => setModus('einrichtung')}>
+                </Button>
+                <Button variant="subtle" color="gray" size="compact-sm" onClick={() => setModus('einrichtung')}>
                   Ersteinrichtung
-                </Anchor>
+                </Button>
               </>
             ) : (
-              <Anchor component="button" type="button" size="xs" onClick={() => setModus('login')}>
+              <Button variant="subtle" size="compact-sm" onClick={() => setModus('login')}>
                 Zurück zur Anmeldung
-              </Anchor>
+              </Button>
             )}
           </Group>
         </Stack>

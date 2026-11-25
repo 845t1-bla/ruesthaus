@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Anchor, Badge, Button, Grid, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Badge, Button, Grid, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import {
   IconAlertTriangle,
   IconArrowsExchange,
@@ -103,9 +103,9 @@ export function Dashboard() {
                   {k.nachbestellen.length}
                 </Badge>
               </Group>
-              <Anchor size="sm" onClick={() => navigate('/bestand')}>
-                Bestand
-              </Anchor>
+              <Button variant="subtle" size="compact-sm" onClick={() => navigate('/bestand')}>
+                Zum Bestand
+              </Button>
             </Group>
             {k.negativ.length > 0 && (
               <Text size="sm" c="red" mb="xs">
@@ -139,9 +139,9 @@ export function Dashboard() {
           <Paper withBorder p="md" h="100%">
             <Group justify="space-between" mb="sm">
               <Title order={5}>Letzte Vorgänge</Title>
-              <Anchor size="sm" onClick={() => navigate('/vorgaenge')}>
-                Alle
-              </Anchor>
+              <Button variant="subtle" size="compact-sm" onClick={() => navigate('/vorgaenge')}>
+                Alle Vorgänge
+              </Button>
             </Group>
             {vorgaenge.length === 0 ? (
               <Text size="sm" c="dimmed">

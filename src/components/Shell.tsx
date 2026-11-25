@@ -111,20 +111,29 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <AppShell
-      header={{ height: 58 }}
+      // Safe Area: Als installierte App liegt die Kopfleiste unter der iPhone-Statusleiste
+      // (status-bar-style black-translucent) – deshalb Höhe und Innenabstand um den Einschub erweitern.
+      header={{ height: 'calc(3.625rem + env(safe-area-inset-top, 0px))' }}
       navbar={{ width: 248, breakpoint: 'sm', collapsed: { mobile: !offen } }}
-      footer={{ height: { base: 62, sm: 0 } }}
+      footer={{ height: { base: 'calc(3.875rem + env(safe-area-inset-bottom, 0px))', sm: 0 } }}
       padding={{ base: 'sm', sm: 'lg' }}
       styles={{ main: { background: 'var(--rh-bg)' } }}
     >
       <AppShell.Header
-        style={{ background: 'var(--rh-shell)', borderBottom: '3px solid var(--rh-akzent)', color: '#fff' }}
+        style={{
+          background: 'var(--rh-shell)',
+          borderBottom: '3px solid var(--rh-akzent)',
+          color: '#fff',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+        }}
         className="rh-no-print"
       >
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
-            <Burger opened={offen} onClick={toggle} hiddenFrom="sm" size="sm" color="#fff" aria-label="Navigation" />
-            <UnstyledButton onClick={() => navigate('/')}>
+            <Burger opened={offen} onClick={toggle} hiddenFrom="sm" size="sm" color="#fff" aria-label={offen ? 'Navigation schließen' : 'Navigation öffnen'} />
+            <UnstyledButton onClick={() => navigate('/')} aria-label="Zur Übersicht" style={{ minHeight: 44 }}>
               <Group gap={10} wrap="nowrap">
                 <Logo />
                 <Box>
@@ -142,8 +151,9 @@ export function Shell({ children }: { children: ReactNode }) {
             <SyncAnzeige />
             <Menu position="bottom-end" width={230} shadow="md">
               <Menu.Target>
-                <UnstyledButton aria-label="Benutzermenü">
-                  <Avatar color="beige" variant="filled" radius="xl" size={34}>
+                <UnstyledButton aria-label="Benutzermenü" style={{ minWidth: 44, minHeight: 44, display: 'grid', placeItems: 'center' }}>
+                  {/* beige.8 statt Standardton: weiße Initiale mit 6,0:1 in beiden Modi */}
+                  <Avatar color="beige.8" variant="filled" radius="xl" size={34}>
                     {(benutzer?.name ?? '?').slice(0, 1).toUpperCase()}
                   </Avatar>
                 </UnstyledButton>
@@ -219,22 +229,23 @@ export function Shell({ children }: { children: ReactNode }) {
         {children}
       </AppShell.Main>
 
-      <AppShell.Footer hiddenFrom="sm" className="rh-no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <AppShell.Footer hiddenFrom="sm" className="rh-no-print" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <Group grow h="100%" gap={0}>
           {MOBIL.map((e) => (
-            <UnstyledButton key={e.to} onClick={() => navigate(e.to)} h="100%">
-              <Stack gap={2} align="center" c={aktiv(e.to) ? 'dpsgBlau.8' : 'dimmed'}>
+            <UnstyledButton key={e.to} onClick={() => navigate(e.to)} h="100%" aria-current={aktiv(e.to) ? 'page' : undefined}>
+              {/* Farbe über CSS-Variable, damit der aktive Tab auch im Dunkelmodus lesbar ist */}
+              <Stack gap={2} align="center" c={aktiv(e.to) ? 'var(--rh-tab-aktiv)' : 'dimmed'}>
                 <e.icon size={22} stroke={aktiv(e.to) ? 2 : 1.6} />
-                <Text size="10px" fw={aktiv(e.to) ? 700 : 500}>
+                <Text size="xs" fw={aktiv(e.to) ? 700 : 500} lh={1.2}>
                   {e.label}
                 </Text>
               </Stack>
             </UnstyledButton>
           ))}
-          <UnstyledButton onClick={toggle} h="100%">
+          <UnstyledButton onClick={toggle} h="100%" aria-label="Weitere Bereiche">
             <Stack gap={2} align="center" c="dimmed">
               <IconDots size={22} stroke={1.6} />
-              <Text size="10px" fw={500}>
+              <Text size="xs" fw={500} lh={1.2}>
                 Mehr
               </Text>
             </Stack>
