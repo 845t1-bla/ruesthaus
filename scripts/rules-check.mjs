@@ -104,6 +104,11 @@ await erwarte('storniert fremden Beleg', true, async () => {
   await updateDoc(doc(admin.db, 'vorgaenge', r.id), { storniert: true, stornoDurchId: 'z' });
 });
 await erwarte('entzieht sich selbst die Admin-Rolle', false, () => updateDoc(doc(admin.db, 'benutzer', admin.uid), { rolle: 'verkaeufer' }));
+await setDoc(doc(admin.db, 'benutzer', fremd.uid), { name: 'Fremd', email: 'fremd@ruesthaus.test', rolle: 'verkaeufer', aktiv: true });
+await erwarte('Verkäufer löscht fremden Benutzer', false, () => deleteDoc(doc(verk.db, 'benutzer', fremd.uid)));
+await erwarte('löscht sich selbst', false, () => deleteDoc(doc(admin.db, 'benutzer', admin.uid)));
+await erwarte('löscht anderen Benutzer', true, () => deleteDoc(doc(admin.db, 'benutzer', fremd.uid)));
+await erwarte('gelöschter Benutzer liest Artikel', false, () => getDocs(collection(fremd.db, 'artikel')));
 
 console.log('\n— Inventursperre —');
 const invRef = doc(collection(admin.db, 'inventuren'));

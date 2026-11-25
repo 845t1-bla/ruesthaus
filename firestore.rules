@@ -49,7 +49,9 @@ service cloud.firestore {
             && request.resource.data.aktiv == true);
       // Admins dürfen sich nicht selbst aussperren.
       allow update: if admin() && (uid != request.auth.uid || nurFelder(['name', 'email']));
-      allow delete: if false;
+      // Löschen nur durch Admins und nie das eigene Profil. Ob die Person schon etwas gebucht hat,
+      // prüft die App vorher; Buchungen speichern den Namen ohnehin als Momentaufnahme.
+      allow delete: if admin() && uid != request.auth.uid;
     }
 
     match /artikel/{id} {

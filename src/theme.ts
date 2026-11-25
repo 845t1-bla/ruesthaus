@@ -82,7 +82,8 @@ export const theme = createTheme({
     NumberInput: { defaultProps: { decimalSeparator: ',', thousandSeparator: '.', hideControls: false } },
     Badge: { defaultProps: { radius: 'sm' } },
     // Schließen-Knöpfe sind reine Symbole – für Screenreader und Sprachsteuerung benennen
-    Modal: { defaultProps: { closeButtonProps: { 'aria-label': 'Schließen' } } },
+    // centered: Meldungen oben rechts dürfen die Knöpfe eines Dialogs nicht verdecken
+    Modal: { defaultProps: { centered: true, closeButtonProps: { 'aria-label': 'Schließen' } } },
     Notification: { defaultProps: { closeButtonProps: { 'aria-label': 'Meldung schließen' } } },
   },
 });
